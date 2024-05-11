@@ -7,8 +7,6 @@ import foundationgames.blasttravel.entity.cannon.EntityCannonBehavior;
 import foundationgames.blasttravel.screen.CannonScreenHandler;
 import foundationgames.blasttravel.util.BTNetworking;
 import foundationgames.blasttravel.util.PlayerEntityDuck;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -25,14 +23,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.PickaxeItem;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.Packet;
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.tag.ItemTags;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
@@ -42,6 +38,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import org.quiltmc.loader.api.minecraft.ClientOnly;
 
 public class CannonEntity extends Entity {
 	public static final Text UI_TITLE = Text.translatable("container.blasttravel.cannon");
@@ -54,7 +51,7 @@ public class CannonEntity extends Entity {
 	public static final CannonBehavior LAZULI = new CannonBehavior(Items.LAPIS_BLOCK, BlastTravel.id("textures/entity/cannon/lazuli.png")).register();
 	public static final CannonBehavior AMETHYST = new CannonBehavior(Items.AMETHYST_BLOCK, BlastTravel.id("textures/entity/cannon/amethyst.png")).register();
 	public static final CannonBehavior TNT = new EntityCannonBehavior(Items.TNT, BlastTravel.id("textures/entity/cannon/tnt.png"), EntityCannonBehavior::tntFactory).register();
-	public static final CannonBehavior ANVIL = new EntityCannonBehavior(Items.ANVIL, s -> s.isIn(ItemTags.ANVIL), BlastTravel.id("textures/entity/cannon/anvil.png"), EntityCannonBehavior::fallingBlockFactory).register();
+	public static final CannonBehavior ANVIL = new EntityCannonBehavior(Items.ANVIL, s -> s.isIn(ItemTags.ANVILS), BlastTravel.id("textures/entity/cannon/anvil.png"), EntityCannonBehavior::fallingBlockFactory).register();
 	public static final CannonBehavior POWDER = new ConcretePowderCannonBehavior().register();
 
 	public static final TrackedData<Integer> BEHAVIOR = DataTracker.registerData(CannonEntity.class, TrackedDataHandlerRegistry.INTEGER);
@@ -105,7 +102,7 @@ public class CannonEntity extends Entity {
 		}
 
 		if (this.dataTracker.get(CHAINED) != this.chained) {
-			if (!world.isClient()) {
+			if (!getWorld().isClient()) {
 				this.dataTracker.set(CHAINED, this.chained);
 			} else {
 				setChained(this.dataTracker.get(CHAINED));
@@ -116,7 +113,7 @@ public class CannonEntity extends Entity {
 			this.animation--;
 		}
 
-		if (this.world.isClient()) {
+		if (this.getWorld().isClient()) {
 			if (this.hasFuse()) {
 				var pos = this.getPos().add(0, 0.75, 0).add(this.getRotationVector(this.getPitch() - 90, this.getYaw()).multiply(0.75));
 				MinecraftClient.getInstance().particleManager.addParticle(ParticleTypes.SMOKE,
@@ -125,8 +122,8 @@ public class CannonEntity extends Entity {
 
 			this.positionTrackTick();
 		} else {
-			boolean hasPower = this.world.getReceivedRedstonePower(this.getBlockPos()) > 0 ||
-					this.world.getReceivedRedstonePower(this.getBlockPos().down()) > 0;
+			boolean hasPower = this.getWorld().getReceivedRedstonePower(this.getBlockPos()) > 0 ||
+					this.getWorld().getReceivedRedstonePower(this.getBlockPos().down()) > 0;
 			if (hasPower != this.powered) {
 				if (hasPower) {
 					this.fireServer();
@@ -141,7 +138,7 @@ public class CannonEntity extends Entity {
 
 	@Override
 	public void onPassengerLookAround(Entity passenger) {
-		if (this.world.isClient() && passenger instanceof PlayerEntity player && player.isMainPlayer()) {
+		if (this.getWorld().isClient() && passenger instanceof PlayerEntity player && player.isMainPlayer()) {
 			if (chained) {
 				player.setYaw(this.getYaw());
 				player.setPitch(this.getPitch());
@@ -162,12 +159,12 @@ public class CannonEntity extends Entity {
 		}
 
 		if (player.isSneaking()) {
-			if (!world.isClient()) {
+			if (!getWorld().isClient()) {
 				if (this.canPlayerModify(player)) {
 					player.openHandledScreen(new SimpleNamedScreenHandlerFactory((syncId, playerInv, user) ->
 							new CannonScreenHandler(syncId, playerInv, this.inventory), UI_TITLE));
 				} else {
-					world.playSound(null, this.getBlockPos(), SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.5f, 1.5f);
+					getWorld().playSound(null, this.getBlockPos(), SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.5f, 1.5f);
 				}
 				return ActionResult.PASS;
 			}
@@ -175,7 +172,7 @@ public class CannonEntity extends Entity {
 		}
 
 		if (!this.hasPassengers() && !this.getBehavior().occupiesCannon(this.inventory.getStack(2))) {
-			if (!world.isClient()) {
+			if (!getWorld().isClient()) {
 				player.setYaw(this.getYaw());
 				player.setPitch(this.getPitch());
 				player.startRiding(this);
@@ -195,30 +192,30 @@ public class CannonEntity extends Entity {
 		if (attacker instanceof PlayerEntity player && player != this.getFirstPassenger()) {
 			if (player.canModifyBlocks() &&
 					(player.isCreative() || player.getStackInHand(Hand.MAIN_HAND).getItem() instanceof PickaxeItem)) {
-				if (!this.world.isClient()) {
-					ItemScatterer.spawn(this.world, this.getBlockPos(), this.inventory);
+				if (!this.getWorld().isClient()) {
+					ItemScatterer.spawn(this.getWorld(), this.getBlockPos(), this.inventory);
 					if (!player.isCreative()) {
-						ItemScatterer.spawn(this.world, this.getX(), this.getY(), this.getZ(), new ItemStack(BlastTravel.CANNON_ITEM));
+						ItemScatterer.spawn(this.getWorld(), this.getX(), this.getY(), this.getZ(), new ItemStack(BlastTravel.CANNON_ITEM));
 					}
 
 					this.remove(RemovalReason.KILLED);
 				}
-				this.world.playSound(null, this.getBlockPos(), SoundEvents.BLOCK_STONE_BREAK, SoundCategory.BLOCKS,
+				this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.BLOCK_STONE_BREAK, SoundCategory.BLOCKS,
 						1, 0.8f);
-				this.world.addBlockBreakParticles(this.getBlockPos(), Blocks.ANVIL.getDefaultState());
+				this.getWorld().addBlockBreakParticles(this.getBlockPos(), Blocks.ANVIL.getDefaultState());
 
 				return true;
 			}
 		}
 
-		this.world.playSound(null, this.getBlockPos(), SoundEvents.BLOCK_STONE_HIT, SoundCategory.BLOCKS,
+		this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.BLOCK_STONE_HIT, SoundCategory.BLOCKS,
 				1, 0.5f);
 		return true;
 	}
 
 	@Override
 	public void updateTrackedPositionAndAngles(double x, double y, double z, float yaw, float pitch, int interpolationSteps, boolean interpolate) {
-		if (!this.world.isClient()) {
+		if (!this.getWorld().isClient()) {
 			this.setPosition(x, y, z);
 
 			if (!this.hasPassengers()) {
@@ -252,7 +249,7 @@ public class CannonEntity extends Entity {
 	}
 
 	public ItemStack getBehaviorStack() {
-		if (!this.world.isClient()) {
+		if (!this.getWorld().isClient()) {
 			return this.inventory.getStack(2);
 		}
 
@@ -260,7 +257,7 @@ public class CannonEntity extends Entity {
 	}
 
 	public void handleInput(boolean firing) {
-		if (this.world.isClient()) {
+		if (this.getWorld().isClient()) {
 			if (firing && !this.firing) {
 				BTNetworking.c2sRequestFire(this);
 			}
@@ -269,7 +266,7 @@ public class CannonEntity extends Entity {
 	}
 
 	public void fireServer() {
-		if (this.world instanceof ServerWorld world) {
+		if (this.getWorld() instanceof ServerWorld world) {
 			var gunpowder = this.inventory.getStack(0);
 			if (gunpowder.isOf(Items.GUNPOWDER) && gunpowder.getCount() > 0) {
 				PlayerEntity firedPlayer = null;
@@ -284,7 +281,7 @@ public class CannonEntity extends Entity {
 					firedPlayer = player;
 				}
 
-				this.world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 1, 1);
+				this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 1, 1);
 				for (var to : world.getPlayers()) {
 					BTNetworking.s2cFireCannon(to, this, firedPlayer, vel);
 				}
@@ -296,13 +293,13 @@ public class CannonEntity extends Entity {
 					player.sendMessage(NO_GUNPOWDER_DIALOG, true);
 				}
 
-				this.world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1, 0.8f);
+				this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1, 0.8f);
 			}
 		}
 	}
 
 	public void fireClient() {
-		if (!world.isClient()) {
+		if (!getWorld().isClient()) {
 			return;
 		}
 
@@ -357,14 +354,14 @@ public class CannonEntity extends Entity {
 
 	private void setChained(boolean chained) {
 		if (chained != this.chained) {
-			this.world.playSound(null, this.getBlockPos(), SoundEvents.ITEM_ARMOR_EQUIP_CHAIN,
+			this.getWorld().playSound(null, this.getBlockPos(), SoundEvents.ITEM_ARMOR_EQUIP_CHAIN,
 					SoundCategory.BLOCKS, 1, 1.2f);
 		}
 
 		this.chained = chained;
 	}
 
-	@Environment(EnvType.CLIENT)
+	@ClientOnly
 	public @Nullable AbstractClientPlayerEntity getClientPlayer() {
 		return this.getFirstPassenger() instanceof AbstractClientPlayerEntity player ? player : null;
 	}
@@ -374,7 +371,7 @@ public class CannonEntity extends Entity {
 	}
 
 	protected void updateStateFromInventory() {
-		if (!this.world.isClient()) {
+		if (!this.getWorld().isClient()) {
 			for (int slot = 0; slot < this.inventory.size(); slot++) {
 				var stack = this.inventory.getStack(slot);
 				if (slot == 1) {
@@ -442,8 +439,4 @@ public class CannonEntity extends Entity {
 		nbt.putBoolean("alwaysModifiable", this.alwaysModifiable);
 	}
 
-	@Override
-	public Packet<?> createSpawnPacket() {
-		return new EntitySpawnS2CPacket(this);
-	}
 }

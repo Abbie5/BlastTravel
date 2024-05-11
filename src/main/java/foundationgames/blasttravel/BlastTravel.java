@@ -4,22 +4,25 @@ import foundationgames.blasttravel.entity.CannonEntity;
 import foundationgames.blasttravel.item.CannonItem;
 import foundationgames.blasttravel.screen.CannonScreenHandler;
 import foundationgames.blasttravel.util.BTNetworking;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedDataHandler;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.feature_flags.FeatureFlags;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemGroups;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.DefaultParticleType;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import org.quiltmc.loader.api.ModContainer;
 import org.quiltmc.qsl.base.api.entrypoint.ModInitializer;
+import org.quiltmc.qsl.entity.api.QuiltEntityTypeBuilder;
+import org.quiltmc.qsl.entity.networking.api.tracked_data.QuiltTrackedDataHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,19 +30,19 @@ public class BlastTravel implements ModInitializer {
 	public static final String MOD_ID = "blasttravel";
 	public static final Logger LOG = LoggerFactory.getLogger("Blast Travel");
 
-	public static final EntityType<CannonEntity> CANNON = Registry.register(Registry.ENTITY_TYPE, id("cannon"),
-			FabricEntityTypeBuilder.<CannonEntity>create()
+	public static final EntityType<CannonEntity> CANNON = Registry.register(Registries.ENTITY_TYPE, id("cannon"),
+			QuiltEntityTypeBuilder.<CannonEntity>create()
 					.entityFactory(CannonEntity::new)
-					.dimensions(EntityDimensions.fixed(1, 0.8f))
+					.setDimensions(EntityDimensions.fixed(1, 0.8f))
 					.build());
 
 	public static final ScreenHandlerType<CannonScreenHandler> CANNON_SCREEN_HANDLER = Registry.register(
-			Registry.SCREEN_HANDLER, id("cannon"), new ScreenHandlerType<>(CannonScreenHandler::new));
+		Registries.SCREEN_HANDLER_TYPE, id("cannon"), new ScreenHandlerType<>(CannonScreenHandler::new, FeatureFlags.DEFAULT_SET));
 
-	public static final Item CANNON_ITEM = Registry.register(Registry.ITEM, id("cannon"),
-			new CannonItem(new Item.Settings().group(ItemGroup.TRANSPORTATION)));
+	public static final Item CANNON_ITEM = Registry.register(Registries.ITEM, id("cannon"),
+			new CannonItem(new Item.Settings()));
 
-	public static final DefaultParticleType CANNON_BLAST = Registry.register(Registry.PARTICLE_TYPE,
+	public static final DefaultParticleType CANNON_BLAST = Registry.register(Registries.PARTICLE_TYPE,
 			id("cannon_blast"), FabricParticleTypes.simple(true));
 
 	public static final TrackedDataHandler<ItemStack> ITEM_STACK_HANDLER = TrackedDataHandler.create(PacketByteBuf::writeItemStack, PacketByteBuf::readItemStack);
@@ -48,7 +51,8 @@ public class BlastTravel implements ModInitializer {
 	public void onInitialize(ModContainer mod) {
 		BTNetworking.init();
 
-		TrackedDataHandlerRegistry.register(ITEM_STACK_HANDLER);
+		QuiltTrackedDataHandlerRegistry.register(id("item_stack_handler"), ITEM_STACK_HANDLER);
+		ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL_BLOCKS).register(entries -> entries.addItem(CANNON_ITEM));
 	}
 
 	public static Identifier id(String path) {

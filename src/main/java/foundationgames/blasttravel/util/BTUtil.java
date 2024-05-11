@@ -2,6 +2,7 @@ package foundationgames.blasttravel.util;
 
 import foundationgames.blasttravel.BlastTravel;
 import foundationgames.blasttravel.mixin.InGameHudAccess;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -11,9 +12,9 @@ public enum BTUtil {;
 
 	public static @Nullable Identifier TEXTURE_OVERRIDE = null;
 
-	public static void renderHudOverlay(InGameHud hud, float scale, Identifier texture) {
+	public static void renderHudOverlay(InGameHud hud, GuiGraphics gui, float scale, Identifier texture) {
 		TEXTURE_OVERRIDE = texture;
-		((InGameHudAccess)hud).blasttravel$renderSpyglassOverlay(scale);
+		((InGameHudAccess)hud).blasttravel$renderSpyglassOverlay(gui, scale);
 		TEXTURE_OVERRIDE = null;
 	}
 }

@@ -12,15 +12,15 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3f;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ConcretePowderCannonBehavior extends CannonBehavior {
 	private static final Identifier TEXTURE = BlastTravel.id("textures/entity/cannon/head/powder.png");
-	private static final Map<Item, Vec3f> COLORS = new HashMap<>();
+	private static final Map<Item, Vector3f> COLORS = new HashMap<>();
 
 	public ConcretePowderCannonBehavior() {
 		super(Items.WHITE_CONCRETE_POWDER,
@@ -32,12 +32,12 @@ public class ConcretePowderCannonBehavior extends CannonBehavior {
 		return true;
 	}
 
-	private Vec3f color(ItemStack stack) {
+	private Vector3f color(ItemStack stack) {
 		if (stack.getItem() instanceof BlockItem item && item.getBlock() instanceof ConcretePowderBlock block) {
 			int color = block.getDefaultMapColor().color;
 
 			return COLORS.computeIfAbsent(item, i ->
-				new Vec3f((float)((color >> 16) & 0xFF) / 255,
+				new Vector3f((float)((color >> 16) & 0xFF) / 255,
 						(float)((color >> 8) & 0xFF) / 255,
 						(float)(color & 0xFF) / 255));
 		}
@@ -47,7 +47,7 @@ public class ConcretePowderCannonBehavior extends CannonBehavior {
 
 	@Override
 	public void onFired(CannonEntity cannon, ItemStack behaviorStack, Vec3d velocity) {
-		if (cannon.world instanceof ServerWorld world) {
+		if (cannon.getWorld() instanceof ServerWorld world) {
 			var rot = cannon.getRotationVector();
 			var origin = cannon.getPos().add(0, 0.75, 0).add(rot.multiply(1.8));
 
@@ -66,7 +66,7 @@ public class ConcretePowderCannonBehavior extends CannonBehavior {
 	}
 
 	@Override
-	public Vec3f headColor(CannonEntity entity) {
+	public Vector3f headColor(CannonEntity entity) {
 		if (!entity.hasPassengers()) {
 			return this.color(entity.getBehaviorStack());
 		}
@@ -75,7 +75,7 @@ public class ConcretePowderCannonBehavior extends CannonBehavior {
 	}
 
 	@Override
-	public @Nullable Vec3f fireColor(CannonEntity entity) {
+	public @Nullable Vector3f fireColor(CannonEntity entity) {
 		return this.color(entity.getBehaviorStack());
 	}
 }

@@ -4,14 +4,13 @@ import foundationgames.blasttravel.BlastTravel;
 import foundationgames.blasttravel.entity.CannonEntity;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3f;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
+import org.quiltmc.loader.api.minecraft.ClientOnly;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +18,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class CannonBehavior {
-	protected static final Vec3f WHITE = new Vec3f(1, 1, 1);
+	protected static final Vector3f WHITE = new Vector3f(1, 1, 1);
 	private static final List<CannonBehavior> ID_TO_BEHAVIOR = new ArrayList<>();
 	private static final Object2IntMap<Predicate<ItemStack>> FILTER_TO_BEHAVIOR_ID = new Object2IntOpenHashMap<>();
 
@@ -48,7 +47,7 @@ public class CannonBehavior {
 		return this;
 	}
 
-	@Environment(EnvType.CLIENT)
+	@ClientOnly
 	public boolean displayHead(CannonEntity entity) {
 		return entity.getClientPlayer() != null;
 	}
@@ -81,12 +80,12 @@ public class CannonBehavior {
 		return ID_TO_BEHAVIOR;
 	}
 
-	@Environment(EnvType.CLIENT)
+	@ClientOnly
 	public Identifier texture(ItemStack stack) {
 		return texture;
 	}
 
-	@Environment(EnvType.CLIENT)
+	@ClientOnly
 	public Identifier headTexture(CannonEntity entity) {
 		var player = entity.getClientPlayer();
 		if (player == null) {
@@ -96,13 +95,13 @@ public class CannonBehavior {
 		return player.getSkinTexture();
 	}
 
-	@Environment(EnvType.CLIENT)
-	public Vec3f headColor(CannonEntity entity) {
+	@ClientOnly
+	public Vector3f headColor(CannonEntity entity) {
 		return WHITE;
 	}
 
-	@Environment(EnvType.CLIENT)
-	public @Nullable Vec3f fireColor(CannonEntity entity) {
+	@ClientOnly
+	public @Nullable Vector3f fireColor(CannonEntity entity) {
 		return null;
 	}
 }

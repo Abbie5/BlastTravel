@@ -12,8 +12,8 @@ import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Axis;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
 
 public class CannonEntityRenderer extends EntityRenderer<CannonEntity> {
 	public static final EntityModelLayer MODEL = new EntityModelLayer(BlastTravel.id("cannon"), "main");
@@ -106,11 +106,11 @@ public class CannonEntityRenderer extends EntityRenderer<CannonEntity> {
 		this.chains.visible = entity.hasChains();
 		this.fuse.visible = entity.hasFuse();
 
-		matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(180));
-		matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(yaw));
+		matrices.multiply(Axis.Z_POSITIVE.rotationDegrees(180));
+		matrices.multiply(Axis.Y_POSITIVE.rotation(yaw));
 
 		float anim = entity.getAnimation(tickDelta);
-		matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(
+		matrices.multiply(Axis.X_POSITIVE.rotationDegrees(
 				-5 * (-2 * (anim*anim*anim*anim*anim*anim*anim*anim) + 2 * (anim*anim)))); // pow() goes the cannon
 
 		this.root.render(matrices, vertexConsumers.getBuffer(RenderLayer.getEntityCutout(this.getTexture(entity))), light, OverlayTexture.DEFAULT_UV);
@@ -124,7 +124,7 @@ public class CannonEntityRenderer extends EntityRenderer<CannonEntity> {
 		if (tick <= 4) {
 			if (color != null) {
 				this.fire.render(matrices, vertexConsumers.getBuffer(RenderLayer.getEyes(DYED_FIRE_TEXTURES[tick])),
-						light, OverlayTexture.DEFAULT_UV, color.getX(), color.getY(), color.getZ(), 1);
+						light, OverlayTexture.DEFAULT_UV, color.x, color.y, color.z, 1);
 			} else {
 				this.fire.render(matrices, vertexConsumers.getBuffer(RenderLayer.getEyes(FIRE_TEXTURES[tick])), light, OverlayTexture.DEFAULT_UV);
 			}
@@ -142,7 +142,7 @@ public class CannonEntityRenderer extends EntityRenderer<CannonEntity> {
 			color = behavior.headColor(entity);
 			this.playerHead.render(matrices,
 					vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(behavior.headTexture(entity))),
-					light, OverlayTexture.DEFAULT_UV, color.getX(), color.getY(), color.getZ(), 1);
+					light, OverlayTexture.DEFAULT_UV, color.x, color.y, color.z, 1);
 		}
 
 		this.resetModel();

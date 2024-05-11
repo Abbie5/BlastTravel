@@ -14,7 +14,7 @@ public abstract class PlayerEntityMixinClient implements PlayerEntityDuck {
 	@Inject(method = "tick", at = @At("TAIL"))
 	private void blasttravel$endTick(CallbackInfo ci) {
 		var self = (PlayerEntity)(Object)this;
-		if (this.blasttravel$inCannonFlight() && self.world.isClient()) {
+		if (this.blasttravel$inCannonFlight() && self.getWorld().isClient()) {
 			MinecraftClient.getInstance().particleManager.addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE,
 					self.prevX, self.prevY, self.prevZ, 0, 0, 0);
 		}

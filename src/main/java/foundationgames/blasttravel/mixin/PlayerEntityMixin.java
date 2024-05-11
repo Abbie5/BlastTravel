@@ -1,6 +1,6 @@
 package foundationgames.blasttravel.mixin;
 
-import foundationgames.blasttravel.entity.CannonPlayerDamageSource;
+import foundationgames.blasttravel.BlastTravel;
 import foundationgames.blasttravel.util.BTNetworking;
 import foundationgames.blasttravel.util.PlayerEntityDuck;
 import net.minecraft.entity.EntityDimensions;
@@ -8,6 +8,8 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -40,12 +42,13 @@ public class PlayerEntityMixin implements PlayerEntityDuck {
 		this.blasttravel$vel = self.getPos().subtract(self.prevX, self.prevY, self.prevZ);
 
 		if (this.blasttravel$inCannonFlight()) {
-			 if (!self.world.isClient()) {
+			 if (!self.getWorld().isClient()) {
 				var vel = self.getVelocity();
 				var frontBox = self.getBoundingBox().stretch(0.2, 0.2, 0.2);
-				for (var entity : self.world.getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), frontBox, entity -> entity != self)) {
+				for (var entity : self.getWorld().getEntitiesByType(TypeFilter.instanceOf(LivingEntity.class), frontBox, entity -> entity != self)) {
 					if (!entity.isInvulnerable()) {
-						entity.damage(new CannonPlayerDamageSource(self), (float)(vel.length() * 4));
+						DamageSource source = self.getDamageSources().create(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, BlastTravel.id("cannon")), self);
+						entity.damage(source, (float)(vel.length() * 4));
 					}
 				}
 			}

@@ -4,7 +4,7 @@ import foundationgames.blasttravel.entity.CannonEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.s2c.play.EntityPassengersSetS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityPassengersUpdateS2CPacket;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,13 +21,13 @@ public class ClientPlayNetworkHandlerMixin {
 	@Shadow @Final private MinecraftClient client;
 	@Unique private Entity blasttravel$cachedMount = null;
 
-	@Inject(method = "onEntityPassengersSet", locals = LocalCapture.CAPTURE_FAILEXCEPTION,
+	@Inject(method = "onEntityPassengersUpdate", locals = LocalCapture.CAPTURE_FAILEXCEPTION,
 			at = @At(value = "INVOKE_ASSIGN", ordinal = 0, shift = At.Shift.AFTER, target = "Lnet/minecraft/client/world/ClientWorld;getEntityById(I)Lnet/minecraft/entity/Entity;"))
-	private void blasttravel$cacheMountedEntity(EntityPassengersSetS2CPacket packet, CallbackInfo ci, Entity mounted) {
+	private void blasttravel$cacheMountedEntity(EntityPassengersUpdateS2CPacket packet, CallbackInfo ci, Entity mounted) {
 		blasttravel$cachedMount = mounted;
 	}
 
-	@ModifyVariable(method = "onEntityPassengersSet", index = 9,
+	@ModifyVariable(method = "onEntityPassengersUpdate", index = 9,
 			at = @At(value = "INVOKE_ASSIGN", ordinal = 0, shift = At.Shift.AFTER, target = "Lnet/minecraft/text/Text;translatable(Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/text/MutableText;"))
 	private Text blasttravel$modifyMountMessage(Text old) {
 		if (blasttravel$cachedMount instanceof CannonEntity) {

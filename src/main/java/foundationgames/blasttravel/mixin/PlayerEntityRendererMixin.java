@@ -9,8 +9,8 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.Axis;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -35,7 +35,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 			var vel = duck.blasttravel$getVelocityLerped(tickDelta);
 			double horizontal = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
 			super.setupTransforms(player, matrices, f, 270 + ((float) Math.atan2(vel.z, vel.x) * MathHelper.DEGREES_PER_RADIAN), tickDelta);
-			matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion((MathHelper.PI * 1.5f) + (float) Math.atan2(vel.y, horizontal)));
+			matrices.multiply(Axis.X_POSITIVE.rotation((MathHelper.PI * 1.5f) + (float) Math.atan2(vel.y, horizontal)));
 
 			ci.cancel();
 		}

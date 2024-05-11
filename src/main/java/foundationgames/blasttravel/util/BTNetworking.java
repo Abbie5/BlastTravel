@@ -2,8 +2,6 @@ package foundationgames.blasttravel.util;
 
 import foundationgames.blasttravel.BlastTravel;
 import foundationgames.blasttravel.entity.CannonEntity;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -11,19 +9,20 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
+import org.quiltmc.loader.api.minecraft.ClientOnly;
 import org.quiltmc.qsl.networking.api.PacketByteBufs;
 import org.quiltmc.qsl.networking.api.ServerPlayNetworking;
 import org.quiltmc.qsl.networking.api.client.ClientPlayNetworking;
 
 public enum BTNetworking {;
-	@Environment(EnvType.CLIENT)
+	@ClientOnly
 	public static void c2sRequestFire(CannonEntity entity) {
 		var buf = PacketByteBufs.create();
 		buf.writeInt(entity.getId());
 		ClientPlayNetworking.send(BlastTravel.id("request_fire"), buf);
 	}
 
-	@Environment(EnvType.CLIENT)
+	@ClientOnly
 	public static void c2sStopCannonFlight(boolean thud) {
 		var buf = PacketByteBufs.create();
 		buf.writeBoolean(thud);
@@ -63,19 +62,19 @@ public enum BTNetworking {;
 			boolean thud = buf.readBoolean();
 			server.execute(() -> {
 				((PlayerEntityDuck)launched).blasttravel$setCannonFlight(false);
-				if (launched.world instanceof ServerWorld world) {
+				if (launched.getWorld() instanceof ServerWorld world) {
 					world.getPlayers().forEach(p -> s2cStopCannonFlight(p, launched));
 				}
 
 				if (thud) {
-					launched.world.playSound(null, launched.getX(), launched.getY(), launched.getZ(),
+					launched.getWorld().playSound(null, launched.getX(), launched.getY(), launched.getZ(),
 							SoundEvents.ENTITY_GENERIC_SMALL_FALL, SoundCategory.PLAYERS, 1, 0.78f);
 				}
 			});
 		});
 	}
 
-	@Environment(EnvType.CLIENT)
+	@ClientOnly
 	public static void initClient() {
 		ClientPlayNetworking.registerGlobalReceiver(BlastTravel.id("fire_cannon"), (client, handler, buf, responseSender) -> {
 			int cannonId = buf.readInt();
